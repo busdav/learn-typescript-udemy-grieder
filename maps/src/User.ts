@@ -1,6 +1,7 @@
 // We needed to manually install the @types/faker type definition file for the faker npm module,
 // so that TS knows what types all methods, variables etc.the faker module has.
-// Sometimes, an npm module would come with a type definition file included.
+// Sometimes, an npm module would come with a type definition file included. If not, we can search for a type definition file on
+// npmjs.com. The naming convention is "@types/moduleName".
 // If we hover now over `faker` and press command key, we can open that type definition file - almost serves as sort of a documentation.
 import faker from "faker";
 
