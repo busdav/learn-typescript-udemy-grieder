@@ -85194,12 +85194,20 @@ function () {
   }
 
   CustomMap.prototype.addMarker = function (mappable) {
-    new google.maps.Marker({
+    var _this = this;
+
+    var marker = new google.maps.Marker({
       map: this.googleMap,
       position: {
         lat: mappable.location.lat,
         lng: mappable.location.lng
       }
+    });
+    marker.addListener("click", function () {
+      var infoWindow = new google.maps.InfoWindow({
+        content: "Hi there!"
+      });
+      infoWindow.open(_this.googleMap, marker);
     });
   };
 
@@ -85260,7 +85268,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61543" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50927" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
