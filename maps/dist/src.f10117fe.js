@@ -85106,11 +85106,14 @@ var __importDefault = this && this.__importDefault || function (mod) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.User = void 0; // We needed to manually install the @types/faker type definition file for the faker npm module,
-// so that TS knows what types all methods, variables etc.the faker module has.
-// Sometimes, an npm module would come with a type definition file included. If not, we can search for a type definition file on
-// npmjs.com. The naming convention is "@types/moduleName".
-// If we hover now over `faker` and press command key, we can open that type definition file - almost serves as sort of a documentation.
+exports.User = void 0;
+/*
+We needed to manually install the @types/faker type definition file for the faker npm module,
+so that TS knows what types all methods, variables etc.the faker module has.
+Sometimes, an npm module would come with a type definition file included. If not, we can search for a type definition file on
+npmjs.com. The naming convention is "@types/moduleName".
+If we hover now over `faker` and press command key, we can open that type definition file - almost serves as sort of a documentation.
+*/
 
 var faker_1 = __importDefault(require("faker"));
 
@@ -85118,9 +85121,13 @@ var User =
 /** @class */
 function () {
   function User() {
-    this.name = faker_1.default.name.findName(); // because all properties of a class need to be initialized, and because just by saying, above, that the `location` property will be an object,
-    // we haven't initialized it yet AS an object, we can't just do, directly, `this.location.lat = ...`, because at this point, `this.location`
-    // is still null or undefined. Above, we only tell TS, "this is what 'location' will BE".
+    this.color = "red";
+    this.name = faker_1.default.name.findName();
+    /*
+    because all properties of a class need to be initialized, and because just by saying, above, that the `location` property will be an object,
+    we haven't initialized it yet AS an object, we can't just do, directly, `this.location.lat = ...`, because at this point, `this.location`
+    is still null or undefined. Above, we only tell TS, "this is what 'location' will BE".
+    */
 
     this.location = {
       // We need to use parseFloat to get to a number, becuase according to faker type definition file, address.latitude() returns a string
@@ -85128,6 +85135,10 @@ function () {
       lng: parseFloat(faker_1.default.address.longitude())
     };
   }
+
+  User.prototype.markerContent = function () {
+    return "User Name: " + this.name;
+  };
 
   return User;
 }();
@@ -85153,37 +85164,64 @@ var Company =
 /** @class */
 function () {
   function Company() {
+    this.color = "red";
     this.companyName = faker_1.default.company.companyName(), this.catchPhrase = faker_1.default.company.catchPhrase(), this.location = {
       lat: parseFloat(faker_1.default.address.latitude()),
       lng: parseFloat(faker_1.default.address.longitude())
     };
   }
 
+  Company.prototype.markerContent = function () {
+    return "\n    <div>    \n      <h1>Company Name: " + this.companyName + "</h1>\n      <h3>Catchphrase: " + this.catchPhrase + "</h3>\n    </div>\n    ";
+  };
+
   return Company;
 }();
 
 exports.Company = Company;
 },{"faker":"node_modules/faker/index.js"}],"src/CustomMap.ts":[function(require,module,exports) {
-"use strict"; // Why are we doing the 'detour' of creating a CustomMap class that creates an instance of the public API class `google.maps.Map`?
-// -> If we work with an instance of `google.maps.Map`, then all the methods of that public API class will be available to it. However, we
-// haven't checked whether these methods might potentially break our app or not. So, in order to avoid another engineer coming into the project
-// and deciding to call these 'dangerous' methods from anywhere, we limit the surface area of our own classes as much as possible; make them as simple as
-// possible. Therefore, we sort of 'hide' and confine the calling of the public API class `google.maps.Map` into THIS file, where we make the
-// `googleMap` property of our CustomMap class PRIVATE (can only be accessed from WITHIN this class).
+"use strict";
+/*
+Why are we doing the 'detour' of creating a CustomMap class that creates an instance of the public API class `google.maps.Map`?
+-> If we work with an instance of `google.maps.Map`, then all the methods of that public API class will be available to it. However, we
+haven't checked whether these methods might potentially break our app or not. So, in order to avoid another engineer coming into the project
+and deciding to call these 'dangerous' methods from anywhere, we limit the surface area of our own classes as much as possible; make them as simple as
+possible. Therefore, we sort of 'hide' and confine the calling of the public API class `google.maps.Map` into THIS file, where we make the
+`googleMap` property of our CustomMap class PRIVATE (can only be accessed from WITHIN this class). (I think you might then give such
+other engineer NO access to THIS file right here. But even if that's not done, the concept helps to decrease the risk.)
+So, in summary, what we're doing is, inside index.ts, we want to LIMIT, RESTRICT, the API SURFACE AREA.
+*/
+
+/*
+Type definition files:
+Because we're adding google maps as a script directly into our index.html, rather than what we'd normally do in TS (adding dependencies via
+npm and importing them), `google` is available as a global variable throughout our project. But, TS doesn't KNOW about this yet, or about
+the different methods and properties of this `google` object. To help TS understand how this third-party JS library works, we're going to install
+another type definition file, @types/googlemaps.
+*/
+
+/*
+The below is a part of typescript and is called a triple slash directive. Triple-slash directives are single-line comments containing
+a single XML tag. The contents of the comment are used as compiler directives. I needed to add this because TS didn't automatically
+use the @types/googlemaps type definition file -> solution if and when that happens.
+*/
+/// <reference types="@types/googlemaps" />
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.CustomMap = void 0; /// <reference types="@types/googlemaps" />
+exports.CustomMap = void 0;
 
 var CustomMap =
 /** @class */
 function () {
   function CustomMap(divId) {
-    // The @types/googlemaps index.d.ts file served us a documentation that `google.maps.Map()` requires 1-2 arguments, one of them an HTML element
-    // that contains the map to be rendered. So we created such an element in index.html and are now referencing it as an argument via a
-    // `document` selector. Hovering over `.Map` gives us the definition, and we can go to the index.d.ts file by command-clicking.
-    // From the definition, we understand that the second, optional parameter is an options object.
+    /*
+    The @types/googlemaps index.d.ts file served us a documentation that `google.maps.Map()` requires 1-2 arguments, one of them an HTML element
+    that contains the map to be rendered. So we created such an element in index.html and are now referencing it as an argument via a
+    `document` selector. Hovering over `.Map` gives us the definition, and we can go to the index.d.ts file by command-clicking.
+    From the definition, we understand that the second, optional parameter is an options object.
+    */
     this.googleMap = new google.maps.Map(document.getElementById(divId), {
       zoom: 1,
       center: {
@@ -85205,7 +85243,7 @@ function () {
     });
     marker.addListener("click", function () {
       var infoWindow = new google.maps.InfoWindow({
-        content: "Hi there!"
+        content: mappable.markerContent()
       });
       infoWindow.open(_this.googleMap, marker);
     });
@@ -85220,14 +85258,17 @@ exports.CustomMap = CustomMap;
 
 Object.defineProperty(exports, "__esModule", {
   value: true
-}); // For module imports, when do we use curly braces for import statements? If, in the exporting file, we only use `export`, then we need to use curly braces in the
-// importing file. That also allows us to safely import more than one object from the exporting file, by e.g. `{ User, House }`. I believe this is
-// plain ES2015, and that's why it's also in react; and I believe TS just replicates this. If we use the default keyword, as in `export default`,
-// then we don't need to put curly braces. The exporting file will then just export whatever we assigned to the `default` keyword.
-// Note that in the importing file, we don't have to call it the same name - we can import the `default` exported object under a different name.
-// This is because, we also don't give a NAME to what we export in `export default` - we essentially just say "export by default the following thing: ..."
-// This is different with just `export`, where we give a name to what we export.
-// Note that in TS world, convention is to NOT use the `default` keyword, and therefore always use curly braces.
+});
+/*
+For module imports, when do we use curly braces for import statements? If, in the exporting file, we only use `export`, then we need to use curly braces in the
+importing file. That also allows us to safely import more than one object from the exporting file, by e.g. `{ User, House }`. I believe this is
+plain ES2015, and that's why it's also in react; and I believe TS just replicates this. If we use the default keyword, as in `export default`,
+then we don't need to put curly braces. The exporting file will then just export whatever we assigned to the `default` keyword.
+Note that in the importing file, we don't have to call it the same name - we can import the `default` exported object under a different name.
+This is because, we also don't give a NAME to what we export in `export default` - we essentially just say "export by default the following thing: ..."
+This is different with just `export`, where we give a name to what we export.
+Note that in TS world, convention is to NOT use the `default` keyword, and therefore always use curly braces.
+*/
 
 var User_1 = require("./User");
 
@@ -85268,7 +85309,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50927" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57355" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
